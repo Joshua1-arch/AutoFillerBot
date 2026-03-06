@@ -42,9 +42,13 @@ export async function POST(req: Request) {
                 sendUpdate("Setting up browser instance...");
                 const launchOptions: any = {
                     headless: true,
-                    executablePath: "C:\\Users\\Joshua\\AppData\\Local\\BraveSoftware\\Brave-Browser\\Application\\brave.exe",
                     slowMo: 250, // Delays every individual Playwright action by 250ms for realistic viewing
                 };
+
+                // Only use the hardcoded local Windows Brave browser path when testing locally
+                if (process.env.NODE_ENV !== "production") {
+                    launchOptions.executablePath = "C:\\Users\\Joshua\\AppData\\Local\\BraveSoftware\\Brave-Browser\\Application\\brave.exe";
+                }
 
                 if (process.env.PROXY_SERVER) {
                     launchOptions.proxy = {
