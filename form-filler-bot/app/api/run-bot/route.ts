@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { chromium, Page } from "playwright";
+import { chromium as localChromium, Page } from "playwright-core";
+import chromium from "@sparticuz/chromium";
 import { generateObject } from "ai";
 import { google } from "@ai-sdk/google";
 import { z } from "zod";
@@ -40,15 +41,19 @@ export async function POST(req: Request) {
             let isStreamingFrames = true;
             try {
                 sendUpdate("Setting up browser instance...");
+                const isLocal = process.env.NODE_ENV !== "production";
+
                 const launchOptions: any = {
                     headless: true,
+                    // @ts-ignore
+                    args: isLocal ? undefined : chromium.args,
+                    // @ts-ignore
+                    defaultViewport: chromium.defaultViewport,
+                    executablePath: isLocal
+                        ? "C:\\Users\\Joshua\\AppData\\Local\\BraveSoftware\\Brave-Browser\\Application\\brave.exe"
+                        : await chromium.executablePath(),
                     slowMo: 250, // Delays every individual Playwright action by 250ms for realistic viewing
                 };
-
-                // Only use the hardcoded local Windows Brave browser path when testing locally
-                if (process.env.NODE_ENV !== "production") {
-                    launchOptions.executablePath = "C:\\Users\\Joshua\\AppData\\Local\\BraveSoftware\\Brave-Browser\\Application\\brave.exe";
-                }
 
                 if (process.env.PROXY_SERVER) {
                     launchOptions.proxy = {
@@ -58,7 +63,7 @@ export async function POST(req: Request) {
                     };
                 }
 
-                browser = await chromium.launch(launchOptions);
+                browser = await localChromium.launch(launchOptions);
                 const context = await browser.newContext({
                     timezoneId: 'America/New_York',
                     locale: 'en-US',
