@@ -106,6 +106,15 @@ export async function POST(req: Request) {
                     iterations++;
                     sendUpdate(`--- Starting Step ${iterations} ---`);
 
+                    sendUpdate(`Waiting for page to fully load...`);
+                    try {
+                        // Attempt to wait for network idle to ensure scripts/API calls finish
+                        await page.waitForLoadState("networkidle", { timeout: 10000 });
+                    } catch (e) {
+                        // Ignore timeout if some background request keeps running continuously
+                    }
+
+                    // Added pacing padding
                     await new Promise(r => setTimeout(r, 10000)); // Paced to 6 RPM to strictly avoid free tier limits
 
                     sendUpdate(`Gathering page context...`);
